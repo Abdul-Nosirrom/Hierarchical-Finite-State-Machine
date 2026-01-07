@@ -416,17 +416,14 @@ namespace HFSM {
                 availableTransition = CurrentStateObject.GetAvailableTransition();
             }
 
-            foreach (EventTransitionBase anyEventTransition in anyEventTransitions) {
-                anyEventTransition.ConsumeEvent();
-            }
-            ConsumeTransitionsEvents();
-            
             if (availableTransition != null) {
                 ChangeState(availableTransition);
                 changedState = true;
+                
+                if (availableTransition is EventTransitionBase eventTransition) {
+                    eventTransition.ConsumeEvent();
+                }
             }
-            //CurrentStateObject.ConsumeTransitionsEvents();
-            //previousStateObject.ConsumeTransitionsEvents(); 
 
             return changedState;
         }
@@ -526,11 +523,13 @@ namespace HFSM {
         /// </param>
         internal void ProcessInstantEvent(EventTransitionBase eventTransition) {
             StateObject originStateObject = eventTransition.OriginStateObject;
-            if (originStateObject.IsActive ||
-                (originStateObject.GetType() == typeof(State.Any) && originStateObject.StateMachine.IsActive) &&
-                eventTransition.AllConditionsMet()) {
+            if ((originStateObject.IsActive ||
+                 (originStateObject.GetType() == typeof(State.Any) && originStateObject.StateMachine.IsActive))
+                && eventTransition.AllConditionsMet()) {
 
                 ChangeState(eventTransition);
+                
+                eventTransition.ConsumeEvent();
             }
         }
 
@@ -604,6 +603,10 @@ namespace HFSM {
         /// The hierarchical execution of <see cref="Exit"/> is performed in a bottom-up fashion.
         /// </summary>
         internal sealed override void Exit() {
+            if (CurrentStateObject != null) {
+                ConsumeTransitionsEvents();
+            }
+
             CurrentStateObject.Exit();
             OnExit();
             IsActive = false;
