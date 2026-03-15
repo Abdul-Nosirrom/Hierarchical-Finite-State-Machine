@@ -32,7 +32,7 @@ namespace HFSM {
         /// <see langword="true"/> if the the <see cref="StateObject"/>s are of the same subclass, <see langword="false"/> otherwise.
         /// </returns>
         public bool Equals(StateObject otherStateObject) {
-            return this.GetType() == otherStateObject.GetType();
+            return ReferenceEquals(this, otherStateObject);
         }
 
         /// <summary>
